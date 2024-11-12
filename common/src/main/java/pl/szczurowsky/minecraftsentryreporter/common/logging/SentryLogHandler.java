@@ -4,8 +4,6 @@ import io.sentry.Sentry;
 import io.sentry.SentryEvent;
 import io.sentry.SentryLevel;
 import io.sentry.protocol.Message;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import pl.szczurowsky.minecraftsentryreporter.common.MSRPlugin;
 import pl.szczurowsky.minecraftsentryreporter.common.config.file.SentryConfig;
 import pl.szczurowsky.minecraftsentryreporter.common.sentry.sanitizers.StackInformation;
@@ -14,8 +12,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 /**
  * Used ForwardLogHandler from CraftBukkit
@@ -44,26 +42,14 @@ public class SentryLogHandler extends ConsoleHandler {
         }, "MSRClearLogsPerSecondThread").start();
     }
 
-    private Logger getLogger(String name) {
-        Logger logger = cachedLoggers.get(name);
-        if (logger == null) {
-            logger = LogManager.getLogger(name);
-            cachedLoggers.put(name, logger);
-        }
-
-        return logger;
-    }
-
     @Override
     public void publish(LogRecord record) {
-        Logger logger = getLogger(record.getLoggerName());
         Throwable exception = record.getThrown();
-        Level level = record.getLevel();
         String message = getFormatter().formatMessage(record);
 
         if (exception != null && config.isProduction()) {
             if (this.logsSentPerSecond.get() > 20) {
-                logger.warn("Sentry is being flooded with logs, skipping sending this one");
+                this.plugin.getLogger().warning("Sentry is being flooded with logs, skipping sending this one");
                 return;
             }
             StackInformation.sanitizeStack(exception);
@@ -72,7 +58,7 @@ public class SentryLogHandler extends ConsoleHandler {
             Message sentryMessage = new Message();
             sentryMessage.setMessage(message);
             event.setMessage(sentryMessage);
-            event.setLogger(logger.getName());
+            event.setLogger(record.getLoggerName());
             event.setServerName(plugin.getServerName());
             event.setTag("ServerVersion", plugin.getServerVersion());
             event.setTag("ServerImplementation", plugin.getServerImplementation());

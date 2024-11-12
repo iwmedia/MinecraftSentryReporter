@@ -40,7 +40,7 @@ public class MSRBungeePlugin extends Plugin implements MSRPlugin {
 
     @Override
     public void onDisable() {
-        if (logHandler != null) this.getProxy().getLogger().getParent().removeHandler(logHandler);
+        if (logHandler != null) this.getProxy().getLogger().removeHandler(logHandler);
     }
 
     @Override
