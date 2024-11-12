@@ -10,6 +10,7 @@ import pl.szczurowsky.minecraftsentryreporter.common.sentry.SentryInitializer;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.logging.Handler;
+import java.util.logging.Logger;
 
 public class MSRBungeePlugin extends Plugin implements MSRPlugin {
 
@@ -29,7 +30,12 @@ public class MSRBungeePlugin extends Plugin implements MSRPlugin {
         }
         this.getProxy().getPluginManager().registerCommand(this, new ProductionSwitchCommand(configurationManager));
         this.logHandler = new SentryLogHandler(configurationManager.getSentryConfig(), this);
-        this.getProxy().getLogger().getParent().addHandler(logHandler);
+
+        Logger logger = this.getProxy().getLogger();
+        if (logger.getParent() != null) {
+            logger = logger.getParent();
+        }
+        logger.addHandler(logHandler);
     }
 
     @Override
